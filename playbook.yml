@@ -1,0 +1,18 @@
+- hosts: vault
+  become: yes
+
+  roles:
+    - role: opensslcaandcerts
+      ca_server: vault01
+      ca_subject: "NINJAROCKESTARS-CA"
+      ca_organization_name: "ACME INTERNATIONAL"
+      cert_cn: "vaulclus.gaseosalab.net"
+      cert_subject_alt_names:
+        - vaulclus.gaseosalab.net
+        - server01.gaseosalab.net
+        - server02.gaseosalab.net
+      cert_org: "ACME Solutions"
+      cert_country: "ES"
+      cert_ou: "IT LABS"
+      cert_expirydate: 20221215100000Z
+      myapp_service_account: vault14

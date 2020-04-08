@@ -1,0 +1,116 @@
+---
+# tasks file for opensslcaandcerts
+
+- name: Set Ansible_Fact with the server name that will create the CA and certificates that will be distributed to the rest of the servers
+  set_fact:
+    root_ca_server: "{{ ca_server }}"
+
+- name: Ensure CA managmement package on rhel systems
+  yum:
+    name: ca-certificates
+    state: present
+
+- name: Create MyApplication service account with no shell
+  user:
+    name: "{{ myapp_service_account }}"
+    shell: /bin/bash
+    system: True
+
+- name: Ensure CA private key is present
+  openssl_privatekey:
+    path: "{{ ca_key_path }}{{ ca_subject }}.key"
+    owner: root
+    group: root
+    mode: '0660'
+  when: ansible_hostname == root_ca_server
+
+- name: Ensure CA Certificate Signing Request is present
+  openssl_csr:
+    path: "/tmp/{{ ca_subject }}.csr"
+    privatekey_path: "{{ ca_key_path }}{{ ca_subject }}.key"
+    country_name: ES
+    organization_name: ACME SOLUTIONS
+    common_name: "{{ ca_subject }}"
+  when: ansible_hostname == root_ca_server
+
+- name: Ensure CA certificate is selfsigned
+  openssl_certificate:
+    path: "{{ ca_cert_path }}{{ ca_subject }}.crt"
+    csr_path: "/tmp/{{ ca_subject }}.csr"
+    privatekey_path: "{{ ca_key_path }}{{ ca_subject }}.key"
+    selfsigned_not_after: "{{ ca_expirydate }}"
+    provider: selfsigned
+  when: ansible_hostname == root_ca_server
+
+- name: Ensure MyApplication private key is present
+  openssl_privatekey:
+    path: "{{ cert_key_path }}{{ cert_cn }}.key"
+    owner: root
+    group: "{{ myapp_service_account }}"
+    mode: '0660'
+  when: ansible_hostname == root_ca_server
+
+- name: Ensure MyApplication Certificate Signing Request is present
+  openssl_csr:
+    path: "/tmp/{{ cert_cn }}.csr"
+    privatekey_path: "{{ cert_key_path }}{{ cert_cn }}.key"
+    country_name: "{{ cert_country }}"
+    organization_name: "{{ cert_org }}"
+    organizational_unit_name: "{{ cert_ou }}"
+    common_name: "{{ cert_cn }}"
+    subject_alt_name: "{{ item.value | map('regex_replace', '^', 'DNS:') | list }}"
+    owner: root
+    mode: '0660'
+  with_dict:
+    dns_server: "{{ cert_subject_alt_names }}"
+  when: ansible_hostname == root_ca_server
+
+- name: Generate an OpenSSL certificate signed with your own CA certificate
+  openssl_certificate:
+    path: "{{ cert_path }}{{ cert_cn }}.crt"
+    csr_path: "/tmp/{{ cert_cn }}.csr"
+    ownca_path: "{{ ca_cert_path }}{{ ca_subject }}.crt"
+    ownca_privatekey_path: "{{ ca_key_path }}{{ ca_subject }}.key"
+    ownca_not_after: "{{ cert_expirydate }}"
+    owner: root
+    group: "{{ myapp_service_account }}"
+    mode: '0660'
+    provider: ownca
+  when: ansible_hostname == root_ca_server
+
+- name: Download the CA and MyApplication certificate files from CA SERVER to Ansible Controller
+  fetch:
+    src: "{{ item }}"
+    dest: "/tmp/{{ ca_server }}/"
+    flat: True
+  loop:
+    - "{{ ca_cert_path }}{{ ca_subject }}.crt"
+    - "{{ cert_path }}{{ cert_cn }}.crt"
+    - "{{ cert_key_path }}{{ cert_cn }}.key"
+  when: ansible_hostname == root_ca_server
+
+- name: Copy public key CA and MyApplication certificate files from Ansible Controller to the other servers
+  copy:
+    src: "{{ item }}"
+    dest: "{{ ca_cert_path }}"
+  with_fileglob:
+    - "/tmp/{{ ca_server }}/*.crt"
+
+- name: Copy private key MyApplication certificate files from Ansible Controller to the other servers
+  copy:
+    src: "{{ item }}"
+    dest: "{{ cert_key_path }}"
+  with_fileglob:
+    - "/tmp/{{ ca_server }}/*.key"
+
+- name: Ensure CA certificate file is present at CA-Trust OS path
+  copy:
+    remote_src: True
+    src: "{{ ca_cert_path }}{{ ca_subject }}.crt"
+    dest: "{{ ca_trust_path }}"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ensure OS trusted certificate store is reloaded
+  command: /usr/bin/update-ca-trust

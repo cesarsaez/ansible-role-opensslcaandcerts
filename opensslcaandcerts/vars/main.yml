@@ -1,0 +1,39 @@
+---
+# vars file for opensslcaandcerts
+
+#Hostname of the server we use to create the CA and Certificates
+ca_server: ""
+# CA expiration date in format ASN.1 TIME values should be specified following the YYYYMMDDHHMMSSZ pattern (Z means UTC timezone)
+ca_expirydate: 20301215100000Z
+#CA Common Name
+ca_subject: "MY OWN CA"
+#CA OU ex: "ACME SOLUTIONS"
+ca_organization_name: ""
+#CA path for public key, adapt depending OS
+ca_cert_path: /etc/pki/tls/certs/
+#CA path for private key, adapt depending OS
+ca_key_path: /etc/pki/tls/private/
+#Certificate path for public key, adapt depending OS or application requirement
+cert_path: /etc/pki/tls/certs/
+#Certificate path for private key, adapt depending OS or application requirement
+cert_key_path: /etc/pki/tls/private/
+#Adapt depending OS
+ca_trust_path: /etc/pki/ca-trust/source/anchors/
+#Certificate Common Name DNS "myservice.example.com"
+cert_cn: ""
+#Certificate Organizastion
+cert_org: ""
+#Certificate Country "ES"
+cert_country: ""
+#Certificate organizational Unit ex: "IT LABS"
+cert_ou: ""
+
+cert_subject_alt_names: []
+# - server01.example.com
+# - server02.example.com
+# - myservice.example.com
+
+# Certificate expiration date in format ASN.1 TIME values should be specified following the YYYYMMDDHHMMSSZ pattern (Z means UTC timezone)
+cert_expirydate: 20221215100000Z
+#My application service account username to be created and granted rights over the certificates
+myapp_service_account: ""

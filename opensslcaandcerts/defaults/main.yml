@@ -1,0 +1,14 @@
+---
+# defaults file for opensslcaandcerts
+
+ca_expirydate: 20301215100000Z
+cert_expirydate: 20221215100000Z
+ca_subject: "MYAPP-CA-G1"
+ca_organization_name: "ACME SOLUTIONS"
+ca_cert_path: /etc/pki/tls/certs/
+ca_key_path: /etc/pki/tls/private/
+cert_path: /etc/pki/tls/certs/
+cert_key_path: /etc/pki/tls/private/
+cert_org: "ACME INTERNATIONAL"
+cert_country: "ES"
+cert_ou: "IT LABS"
