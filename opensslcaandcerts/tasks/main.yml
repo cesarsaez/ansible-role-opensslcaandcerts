@@ -89,6 +89,15 @@
     - "{{ cert_key_path }}{{ cert_cn }}.key"
   when: ansible_hostname == root_ca_server
 
+
+- name: Create certificate chain file
+  copy: 
+    dest: "{{ cert_path }}{{ cert_cn }}_chain.crt"
+    content: >
+      {{lookup('file', '/tmp/{{ ca_server }}/{{ cert_cn }}.crt')}}
+
+      {{lookup('file', '/tmp/{{ ca_server }}/{{ ca_subject }}.crt')}}
+
 - name: Copy public key CA and MyApplication certificate files from Ansible Controller to the other servers
   copy:
     src: "{{ item }}"

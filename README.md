@@ -4,11 +4,11 @@ The goal of this Ansible role is to build an OpenSSL Certification Authority and
 
 The role is build assuming the following scenario:
 
-- Create a root CA in 1 given node from the inventory
+- Create a Root CA in 1 given node from the inventory
 - Distribute and make trust the CA in the nodes from the inventory.
 - Create a SSL certificate with the given Common Name and Subject Alternatives names.
+- Create a SSL certificate with the given Common Name and Subject Alternatives names and it chains it to the Root CA with the "_chain" suffix
 - Distribute the SSL certificates to a given path in all the nodes form the directory.
-
 ## Usage
 
 Create your playbook and adapt the variables
