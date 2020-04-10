@@ -31,6 +31,11 @@
     country_name: ES
     organization_name: ACME SOLUTIONS
     common_name: "{{ ca_subject }}"
+    key_usage:
+      - digitalSignature
+      - keyCertSign
+      - cRLSign
+    basic_constraints: "CA:TRUE"
   when: ansible_hostname == root_ca_server
 
 - name: Ensure CA certificate is selfsigned
@@ -59,6 +64,9 @@
     organizational_unit_name: "{{ cert_ou }}"
     common_name: "{{ cert_cn }}"
     subject_alt_name: "{{ item.value | map('regex_replace', '^', 'DNS:') | list }}"
+    key_usage:
+      - digitalSignature
+      - keyEncipherment
     owner: root
     mode: '0660'
   with_dict:
